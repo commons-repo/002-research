@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System-B</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;            
+    }
+    
+    canvas {
+      border: 1px solid black;
+      display: block;
+      margin: 20px auto;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+    
+    button {
+      margin: 5px;
+    }
+
+    #points-list {
+      list-style-type: none;
+      padding: 0;
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      width: 500px;
+      box-sizing: border-box;
+    }
+
+    .point-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;            /* Ensure items fill the list's width */
+    }
+
+    .icon-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        flex-shrink: 0;         /* Prevent buttons from shrinking */
+    }
+
+    #grid {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      display: none;
+    }
+
+    .grid-line {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .horizontal-line {
+        position: absolute;
+        height: 1px;
+    }
+
+    .vertical-line {
+        position: absolute;
+        width: 1px;
+    }
+
+  </style>
+</head>
+<body>
+  <h3 style="text-align: center;">Interactive Point Cloud Generator (Geometric Elements)</h3>
+  <div id="settings" style="text-align: center;">
+    <input type="file" id="imageLoader" accept="image/*">
+    <label for="show-grid" style="cursor: pointer; margin-left: 10px;">
+      <input type="checkbox" id="show-grid" onclick="toggleGrid()"> Show Grid
+    </label>  
+  </div>
+  
+  <canvas id="canvas" width="800" height="600"></canvas>  
+
+  <div id="controls"> 
+    <h3>Select Shape</h3>
+    <select id="shape-selector">
+      <option value="">Select a shape</option>
+      <option value="freeform">Free Form (any number of points)</option>
+      <option value="triangle">Triangle (3 points)</option>
+      <option value="quadrilateral">Quadrilateral (4 points)</option>
+      <option value="pentagon">Pentagon (5 points)</option>
+      <option value="hexagon">Hexagon (6 points)</option>
+      <option value="heptagon">Heptagon (7 points)</option>
+      <option value="octagon">Octagon (8 points)</option>
+      <option value="nonagon">Nonagon (9 points)</option>
+      <option value="decagon">Decagon (10 points)</option>
+      <option value="circle">Circle (3 points on diameter)</option>
+      <option value="arc">Half Circle / Arc (3 points: center, start, end)</option>
+      <option value="major-arc">Major Arc (3 points: center, start, end)</option>
+      <option value="ellipse">Ellipse (3 points: center, end-points on horizontal and vertical axes)</option>
+    </select>
+    <h3>Points</h3>
+    <ul id="points-list"></ul>
+    <button onclick="deleteAllPoints()">Delete All Points</button>
+    <button onclick="exportPoints()">Export All Points (CSV)</button>
+    <button onclick="exportForOpenSCAD()">Export for OpenSCAD (TXT)</button>
+  </div>
+  <script src="js/script-system-B.js"></script>
+</body>
+</html>
