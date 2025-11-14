@@ -1,295 +1,420 @@
-// Global selections and variables
-const svg = d3.select("#canvas");
-let cycles = [];             // Array of finalized cycles (each with control and dense points)
-let currentCyclePoints = []; // Control points for the current (unfinished) cycle
-let currentCycleDensePoints = []; // Dense points computed for the current cycle
-let totalCycles = parseInt(document.getElementById("totalCycles").value, 10) || 1;
-let currentCycleIndex = 0;   // 0-based index for the current cycle
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imageLoader = document.getElementById('imageLoader');
+    
+    const shapeSelector = document.getElementById('shape-selector');
+    const pointsList = document.getElementById('points-list');
+    let points = [];
+    let maxPoints = 0;
 
-let img = null, imgElement = null;
+    let img = new Image();
+    let imgScale = 1;
+    let imgOffsetX = 0;
+    let imgOffsetY = 0; 
 
-// Update totalCycles when the input changes.
-document.getElementById("totalCycles").addEventListener("change", function () {
-  totalCycles = parseInt(this.value, 10) || 1;
-  updateCycleInfo();
-});
+    shapeSelector.addEventListener('change', (e) => {
+      resetPoints();
+      switch (e.target.value) {
+          case 'triangle': maxPoints = 3; break;
+          case 'quadrilateral': maxPoints = 4; break;
+          case 'pentagon': maxPoints = 5; break;
+          case 'hexagon': maxPoints = 6; break;
+          case 'heptagon': maxPoints = 7; break;
+          case 'octagon': maxPoints = 8; break;
+          case 'nonagon': maxPoints = 9; break;
+          case 'decagon': maxPoints = 10; break;
+          case 'freeform': maxPoints = null; break;
+          case 'circle': maxPoints = 3; break;
+          case 'arc': maxPoints = 3; break;
+          case 'major-arc': maxPoints = 3; break;
+          case 'ellipse': maxPoints = 3; break;
+          default: maxPoints = 0; break;
+      }
+    });
 
-// When the dense points count is changed, redraw the current cycle (if any)
-document.getElementById("densePointsCount").addEventListener("input", function () {
-  // Only update the current cycle if there are control points present
-  if (currentCyclePoints.length > 0) {
-    drawCanvas();
-  }
-});
+    // Load and display the image
+    imageLoader.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
 
-// Update the cycle info display.
-function updateCycleInfo() {
-    const cycleInfo = document.getElementById("cycleInfo");
-    if (currentCycleIndex >= totalCycles) {
-      cycleInfo.innerHTML = `All sets completed (${totalCycles} sets)`;
-    } else {
-      cycleInfo.innerHTML = `Set ${currentCycleIndex + 1} of ${totalCycles}`;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      img.onload = () => {
+        
+        resetAll();
+
+        const scaleX = canvas.width / img.width;
+        const scaleY = canvas.height / img.height;
+        imgScale = Math.min(scaleX, scaleY);
+
+        imgOffsetX = (canvas.width - img.width * imgScale) / 2;
+        imgOffsetY = (canvas.height - img.height * imgScale) / 2;
+
+        redraw();
+      };
+    });
+
+    // Redraw the canvas
+    function redraw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, imgOffsetX, imgOffsetY, img.width * imgScale, img.height * imgScale);
+      createGrid();      
+      drawPoints();
     }
-}
 
-// --- Image Loader ---
-const imageLoader = document.getElementById("imageLoader");
-imageLoader.addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (imgElement) imgElement.remove();
-    img = new Image();
-    img.src = e.target.result;
-    img.onload = () => {
-      imgElement = svg.append("image")
-                      .attr("href", img.src)
-                      .attr("x", 0)
-                      .attr("y", 0)
-                      .attr("width", 800)
-                      .attr("height", 600);
-    };
-  };
-  reader.readAsDataURL(file);
-});
-
-// --- Canvas Click Handler ---
-// Simply adds a new control point for the current cycle.
-svg.on("click", function (event) {
-  if (currentCycleIndex >= totalCycles) return;
-  const coords = d3.pointer(event);
-  addPoint(coords[0], coords[1]);
-});
-
-// Add a control point and redraw.
-function addPoint(x, y) {
-  currentCyclePoints.push({ x, y });
-  drawCanvas();
-}
-
-// --- Drawing Functions ---
-function drawCanvas() {
-  // Clear current drawings from the current cycle (but do not remove finalized cycles).
-  svg.selectAll("circle, path, .control-polygon, .dense-point, .all-dense-point").remove();
-
-  // Draw the control polygon if there are at least two points.
-  if (currentCyclePoints.length > 1) {
-    svg.append("path")
-      .datum(currentCyclePoints)
-      .attr("class", "control-polygon")
-      .attr("d", d3.line().x(d => d.x).y(d => d.y));
-  }
-
-  // Draw the control points.
-  svg.selectAll(".control-point")
-    .data(currentCyclePoints)
-    .enter()
-    .append("circle")
-    .attr("class", "control-point")
-    .attr("cx", d => d.x)
-    .attr("cy", d => d.y)
-    .attr("r", 5)
-    .attr("fill", "red")
-    .call(d3.drag()
-            .on("start", dragStart)
-            .on("drag", dragging)
-            .on("end", dragEnd)
-    );
-
-  // Draw the spline (dense points) if there are enough control points.
-  drawSplineCurve(currentCyclePoints);
-}
-
-// Draw a B‑spline (using a basis curve) and sample dense points.
-function drawSplineCurve(pointsArray) {
-  if (pointsArray.length < 4) {
-    currentCycleDensePoints = [];
-    return;
-  }
-
-  const lineGenerator = d3.line()
-      .curve(d3.curveBasis)
-      .x(d => d.x)
-      .y(d => d.y);
-
-  const pathData = lineGenerator(pointsArray);
-  if (!pathData) {
-    console.error("Invalid path data.");
-    return;
-  }
-
-  // Create a temporary (hidden) path for sampling.
-  const tempPath = svg.append("path")
-      .attr("d", pathData)
-      .attr("fill", "none")
-      .attr("stroke", "none")
-      .node();
-
-  if (!tempPath) {
-    console.error("Failed to create temporary path.");
-    return;
-  }
-
-  const pathLength = tempPath.getTotalLength();
-  // Use the current value from the UI.
-  const densePointsInput = document.getElementById("densePointsCount");
-  const totalSamples = densePointsInput ? parseInt(densePointsInput.value, 10) : 100;
-  let densePoints = [];
-
-  try {
-    for (let i = 0; i <= totalSamples; i++) {
-      const point = tempPath.getPointAtLength((i / totalSamples) * pathLength);
-      densePoints.push({ x: point.x, y: point.y });
+    // Draw all points
+    function drawPoints() {
+      points.forEach((point, index) => {
+        ctx.beginPath();
+        ctx.fillStyle = 'red'; // Regular points
+        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);     
+        ctx.fill();
+      });
     }
-  } catch (error) {
-    console.error("Error extracting dense points:", error);
-    return;
-  }
 
-  d3.select(tempPath).remove(); // Clean up the temporary path.
+    function addPoint(x, y) {
+      points.push({ x, y });
+    }    
 
-  // Draw the dense points.
-  svg.selectAll(".dense-point")
-    .data(densePoints)
-    .enter()
-    .append("circle")
-    .attr("class", "dense-point")
-    .attr("cx", d => d.x)
-    .attr("cy", d => d.y)
-    .attr("r", 3)
-    .attr("fill", "blue");
+    function updatePointsList() {
+      pointsList.innerHTML = '';
+      points.forEach((point, index) => {
+          const listItem = document.createElement('li');
+          listItem.classList.add('point-item');
+          listItem.textContent = `Point ${index + 1}: (${point.x.toFixed(5)}, ${point.y.toFixed(5)})`;
 
-  // Update the current cycle's dense points.
-  currentCycleDensePoints = densePoints;
-}
+          // Up button
+          const upButton = document.createElement('button');
+          //upButton.innerHTML = '⬆️';
+          upButton.innerHTML = '&uarr;'; // Up arrow entity
+          upButton.classList.add('icon-button');
+          upButton.onclick = () => movePoint(index, -1);
 
-// --- Drag Handlers ---
-function dragStart(event, d) { }
-function dragging(event, d) {
-  d.x = event.x;
-  d.y = event.y;
-  drawCanvas();
-}
-function dragEnd(event, d) {
-  drawCanvas();
-}
+          // Down button
+          const downButton = document.createElement('button');
+          //downButton.innerHTML = '⬇️';
+          downButton.innerHTML = '&darr;'; // Down arrow entity
+          downButton.classList.add('icon-button');
+          downButton.onclick = () => movePoint(index, 1);
 
-// --- Button Handlers ---
+          // Delete button
+          const deleteButton = document.createElement('button');
+          //deleteButton.innerHTML = '➖';
+          deleteButton.innerHTML = '&times;'; // Cross symbol
+          deleteButton.classList.add('icon-button');
+          deleteButton.onclick = () => deletePoint(index);
 
-// Finalize the current cycle.
-function cycleDone() {
-  if (currentCycleIndex >= totalCycles) {
-    alert("All sets are already completed.");
-    return;
-  }
-
-  // Warn if too few points have been drawn.
-  if (currentCyclePoints.length < 4) {
-    if (!confirm("Not enough points to form a spline. Complete this set anyway?")) {
-      return;
+          listItem.append(upButton, downButton, deleteButton);
+          pointsList.appendChild(listItem);
+      });
     }
-  }
 
-  // Save the current cycle’s data.
-  cycles.push({
-    controlPoints: [...currentCyclePoints],
-    densePoints: [...currentCycleDensePoints]
+    function movePoint(index, direction) {
+      if ((direction === -1 && index > 0) || (direction === 1 && index < points.length - 1)) {
+          const temp = points[index];
+          points[index] = points[index + direction];
+          points[index + direction] = temp;
+          updatePointsList();
+          redraw();
+      }
+    }
+
+    function deletePoint(index) {
+      points.splice(index, 1);
+      updatePointsList();
+      redraw();
+    }
+
+    function generateCirclePoints() {
+      const [p1, p2, p3] = points;
+
+      // Midpoints of segments
+      const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+
+      // Slopes of segments
+      const slope1 = (p2.y - p1.y) / (p2.x - p1.x);
+      const slope2 = (p3.y - p2.y) / (p3.x - p2.x);
+
+      // Perpendicular slopes
+      const perpSlope1 = -1 / slope1;
+      const perpSlope2 = -1 / slope2;
+
+      // Center of the circle (intersection of perpendicular bisectors)
+      const centerX = (mid2.y - mid1.y + perpSlope1 * mid1.x - perpSlope2 * mid2.x) / (perpSlope1 - perpSlope2);
+      const centerY = mid1.y + perpSlope1 * (centerX - mid1.x);
+
+      // Calculate radius as distance from the center to one of the points
+      const radius = Math.sqrt(Math.pow(p1.x - centerX, 2) + Math.pow(p1.y - centerY, 2));
+
+      // Calculate the circumference and determine number of points based on 5-pixel spacing
+      const circumference = 2 * Math.PI * radius;
+      const spacing = 10; // Target spacing between points
+      const numPoints = Math.max(20, Math.round(circumference / spacing));
+
+      // Clear existing points from the image and reset points array
+      points = [];
+      redraw();
+
+      // Generate and display final circle points
+      for (let i = 0; i < numPoints; i++) {
+         const angle = (2 * Math.PI * i) / numPoints;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          addPoint(x, y);
+          redraw();
+      }
+
+      updatePointsList();
+    }
+
+    function generateArcPoints(centerX, centerY, point1X, point1Y, point2X, point2Y, spacing = 10) {
+      const radius = Math.sqrt(Math.pow(point1X - centerX, 2) + Math.pow(point1Y - centerY, 2));
+
+      // Calculate angles of both boundary points relative to the center
+      const angle1 = Math.atan2(point1Y - centerY, point1X - centerX);
+      const angle2 = Math.atan2(point2Y - centerY, point2X - centerX);
+
+      // Determine start and end angles for the minor arc
+      const startAngle = Math.min(angle1, angle2);
+      const endAngle = Math.max(angle1, angle2);
+
+      // Calculate arc length and dynamically set number of points
+      const arcLength = radius * (endAngle - startAngle);
+      const numPoints = Math.max(10, Math.round(arcLength / spacing)); // Ensure a minimum of 10 points
+
+      let points = [];
+      for (let i = 0; i <= numPoints; i++) {
+          const angle = startAngle + (i / numPoints) * (endAngle - startAngle);
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    function generateMajorArcPoints(centerX, centerY, point1X, point1Y, point2X, point2Y, spacing = 10) {
+      const radius = Math.sqrt(Math.pow(point1X - centerX, 2) + Math.pow(point1Y - centerY, 2));
+
+      // Calculate angles of both boundary points relative to the center
+      let angle1 = Math.atan2(point1Y - centerY, point1X - centerX);
+      let angle2 = Math.atan2(point2Y - centerY, point2X - centerX);
+
+      // Ensure angle2 is greater than angle1; if not, swap them
+      if (angle1 > angle2) {
+          [angle1, angle2] = [angle2, angle1];
+      }
+
+      // Calculate the arc path for the major arc
+      let startAngle, endAngle;
+      const angleDiff = angle2 - angle1;
+      if (angleDiff <= Math.PI) {
+          // Minor arc is between angle1 and angle2; for major arc, extend around
+          startAngle = angle2;
+          endAngle = angle1 + 2 * Math.PI;
+      } else {
+          // Major arc is the shorter path directly from angle1 to angle2
+          startAngle = angle1;
+          endAngle = angle2;
+      }
+
+      // Calculate arc length and dynamically set number of points
+      const arcLength = radius * (endAngle - startAngle);
+      const numPoints = Math.max(30, Math.round(arcLength / spacing)); // Ensure a minimum of 30 points
+
+      let points = [];
+      for (let i = 0; i <= numPoints; i++) {
+          const angle = startAngle + (i / numPoints) * (endAngle - startAngle);
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    function generateEllipsePoints(centerX, centerY, xRadiusX, xRadiusY, yRadiusX, yRadiusY, spacing = 10) {
+      // Calculate the x and y radii based on the distances from the center to the two radius-defining points
+      const xRadius = Math.sqrt(Math.pow(xRadiusX - centerX, 2) + Math.pow(xRadiusY - centerY, 2));
+      const yRadius = Math.sqrt(Math.pow(yRadiusX - centerX, 2) + Math.pow(yRadiusY - centerY, 2));
+
+      // Approximate the perimeter of the ellipse for dynamic point calculation
+      const perimeter = Math.PI * (3 * (xRadius + yRadius) - Math.sqrt((3 * xRadius + yRadius) * (xRadius + 3 * yRadius)));
+      const numPoints = Math.max(20, Math.round(perimeter / spacing)); // Ensure a minimum of 20 points for smoothness
+
+      let points = [];
+      for (let i = 0; i <= numPoints; i++) {
+          const angle = (2 * Math.PI * i) / numPoints;
+          const x = centerX + xRadius * Math.cos(angle);
+          const y = centerY + yRadius * Math.sin(angle);
+          points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    function deleteAllPoints() {
+      points = [];
+      updatePointsList();
+      redraw();
+    }
+
+    function resetPoints() {
+      points = [];
+      updatePointsList();
+      redraw();
+    }
+
+    function resetAll() {
+      resetPoints();
+      shapeSelector.value = '';
+      maxPoints = 0;
+    }
+
+    function exportPoints() {
+      // Prepare CSV header
+      let csvContent = "point,x,y\n";
+  
+      // Add each point to the CSV content
+      points.forEach((point, index) => {
+          csvContent += `${index + 1},${point.x.toFixed(5)},${point.y.toFixed(5)}\n`;
+      });
+  
+      // Create a downloadable link for the CSV file
+      const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "points.csv");
+      document.body.appendChild(link);
+  
+      // Trigger the download
+      link.click();
+  
+      // Remove the link after download
+      document.body.removeChild(link);
+    }
+
+    function exportForOpenSCAD() {
+      // Prepare OpenSCAD points format
+      let openSCADContent = "[";
+      points.forEach((point, index) => {
+          openSCADContent += `[${point.x.toFixed(5)}, ${point.y.toFixed(5)}]`;
+          if (index < points.length - 1) {
+              openSCADContent += ", ";
+          }
+      });
+      openSCADContent += "];";
+
+      // Create a downloadable link for the TXT file
+      const encodedUri = encodeURI("data:text/plain;charset=utf-8," + openSCADContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "points_for_openscad.txt");
+      document.body.appendChild(link);
+
+      // Trigger the download
+      link.click();
+
+      // Remove the link after download
+      document.body.removeChild(link);
+    }
+
+    let showGrid = false; // Track grid visibility state
+
+    function toggleGrid() {
+        showGrid = !showGrid; // Toggle the grid state
+        redraw(); // Redraw the canvas to reflect the current grid state
+    }
+
+    function createGrid() {
+
+      if (!showGrid) return; // Don't draw the grid if it's hidden
+
+      const rows = 10;
+      const cols = 10;
+      const rowSpacing = canvas.height / rows;
+      const colSpacing = canvas.width / cols;
+  
+      // Draw horizontal lines
+      for (let i = 1; i < rows; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, i * rowSpacing);
+          ctx.lineTo(canvas.width, i * rowSpacing);
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.stroke();
+      }
+  
+      // Draw vertical lines
+      for (let j = 1; j < cols; j++) {
+          ctx.beginPath();
+          ctx.moveTo(j * colSpacing, 0);
+          ctx.lineTo(j * colSpacing, canvas.height);
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.stroke();
+      }
+    } 
+
+
+   canvas.addEventListener('mousedown', (event) => {
+    if (maxPoints === null || points.length < maxPoints) {
+
+        const { x, y } = getMousePos(event);
+
+        addPoint(x,y);
+        updatePointsList();
+        redraw();
+
+        if (shapeSelector.value === 'circle' && points.length === 3) {
+            generateCirclePoints();
+        }
+
+        if (shapeSelector.value === 'arc' && points.length === 3) {
+            // Use generateArcPoints for arc creation after three clicks
+            const arcPoints = generateArcPoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+            points = arcPoints; // Replace points array with calculated arc points
+            redraw(); // Clear previous points from the image
+            updatePointsList();
+        }
+        if (shapeSelector.value === 'major-arc' && points.length === 3) {
+            // Major Arc
+            const arcPoints = generateMajorArcPoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+            points = arcPoints;
+            redraw();
+            updatePointsList();
+        }
+
+        if (shapeSelector.value === 'ellipse' && points.length === 3) {
+            // Ellipse generation
+            const ellipsePoints = generateEllipsePoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+            points = ellipsePoints;
+            redraw();
+            updatePointsList();
+        }
+
+    } else if (maxPoints > 0) {
+        alert(`Maximum points for a ${shapeSelector.value} are already selected.`);
+    }
   });
 
-  currentCycleIndex++;
-  updateCycleInfo();
 
-  // Prepare the new current cycle.
-  const reuseCheckbox = document.getElementById("reuseLast");
-  if (currentCycleIndex < totalCycles && reuseCheckbox.checked && cycles[currentCycleIndex - 1].controlPoints.length > 0) {
-    // Start the new cycle with the last control point of the previous cycle.
-    const lastPoint = cycles[currentCycleIndex - 1].controlPoints.slice(-1)[0];
-    currentCyclePoints = [{ x: lastPoint.x, y: lastPoint.y }];
-  } else {
-    currentCyclePoints = [];
-  }
-  currentCycleDensePoints = [];
-  
-  // Clear the drawing area (finalized cycles remain saved).
-  svg.selectAll("circle, path, .control-polygon, .dense-point, .all-dense-point").remove();
-
-  if (currentCycleIndex >= totalCycles) {
-    alert("All sets are completed.");
-  } else {
-    alert("Set completed. Begin drawing for the next set.");
-    drawCanvas();
-  }
-}
-
-// "Show All Dense Points" overlays all dense points (from finished cycles and the current cycle) in green.
-function showAllDensePoints() {
-  svg.selectAll(".all-dense-point").remove();
-  let allDensePoints = [];
-
-  cycles.forEach(cycle => {
-    allDensePoints = allDensePoints.concat(cycle.densePoints);
-  });
-  if (currentCycleDensePoints.length > 0) {
-    allDensePoints = allDensePoints.concat(currentCycleDensePoints);
+  function getMousePos(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    return { x, y };
   }
 
-  svg.selectAll(".all-dense-point")
-    .data(allDensePoints)
-    .enter()
-    .append("circle")
-    .attr("class", "all-dense-point")
-    .attr("cx", d => d.x)
-    .attr("cy", d => d.y)
-    .attr("r", 3)
-    .attr("fill", "blue");
-}
 
-// "Delete All" clears only the current (unfinished) cycle.
-// If continuity is enabled and a finalized cycle exists, it adds the last control point
-// from the most recent finalized cycle back into the new current cycle.
-function deleteAllPoints() {
-  currentCyclePoints = [];
-  currentCycleDensePoints = [];
-  const reuseCheckbox = document.getElementById("reuseLast");
-  if (reuseCheckbox.checked && cycles.length > 0) {
-    const lastCycle = cycles[cycles.length - 1];
-    if (lastCycle.controlPoints.length > 0) {
-      const lastPoint = lastCycle.controlPoints.slice(-1)[0];
-      currentCyclePoints.push({ x: lastPoint.x, y: lastPoint.y });
-    }
-  }
-  drawCanvas();
-}
+  // Attach functions to window for global access
+  window.toggleGrid = toggleGrid;
+  window.deleteAllPoints = deleteAllPoints;
+  window.exportPoints = exportPoints;
+  window.exportForOpenSCAD = exportForOpenSCAD;
 
-// "Export CSV" generates a CSV file with data from all cycles.
-function exportData() {
-  let csvData = "Set,Type,X,Y\n";
-  
-  cycles.forEach((cycle, index) => {
-    cycle.controlPoints.forEach(p => {
-      csvData += `${index + 1},Control,${p.x.toFixed(5)},${p.y.toFixed(5)}\n`;
-    });
-    cycle.densePoints.forEach(p => {
-      csvData += `${index + 1},Dense,${p.x.toFixed(5)},${p.y.toFixed(5)}\n`;
-    });
-  });
-  
-  // Also include data from the current (unfinished) cycle.
-  if (currentCyclePoints.length > 0) {
-    const index = currentCycleIndex + 1;
-    currentCyclePoints.forEach(p => {
-      csvData += `${index},Control,${p.x.toFixed(5)},${p.y.toFixed(5)}\n`;
-    });
-    currentCycleDensePoints.forEach(p => {
-      csvData += `${index},Dense,${p.x.toFixed(5)},${p.y.toFixed(5)}\n`;
-    });
-  }
-  
-  const blob = new Blob([csvData], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "points.csv";
-  link.click();
-}
+});
