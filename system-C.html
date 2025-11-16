@@ -107,16 +107,27 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <button class="tab-button active" data-tab="mirror">Mirror</button>
-    <button class="tab-button" data-tab="rotate">Rotate</button>
-    <button class="tab-button" data-tab="translate">Translate</button>
+    <button class="tab-button active" data-tab="translate">Translate</button>
+    <button class="tab-button" data-tab="mirror">Mirror</button>
+    <button class="tab-button" data-tab="rotate">Rotate</button>    
     <button class="tab-button" data-tab="scale">Scale</button>
     <button class="tab-button" data-tab="sample-reduce">Sample</button>
-    <button class="tab-button" data-tab="center-tab">Center</button>
+    <!-- <button class="tab-button" data-tab="center-tab">Center</button> -->
   </div>
 
   <!-- Tab Content Panels -->
-  <div id="mirror" class="tab-panel active">
+   <div id="translate" class="tab-panel active">
+    <!-- Existing translation controls can go here -->
+    <div id="translating">
+      <label for="translationX">Translate at X:</label>
+      <input type="number" id="translationX" value="0">
+      <label for="translationY">Translate at Y:</label>
+      <input type="number" id="translationY" value="0">
+      <button id="translateButton">Translate</button>
+    </div>
+  </div>
+
+  <div id="mirror" class="tab-panel">
     <!-- Existing mirror controls can go here -->
     <div id="mirroring">
       <label for="mirrorAxis">Mirror By:</label>
@@ -154,7 +165,8 @@
       <br>
       <button id="rotateRefButton">Rotate</button>
       <br>
-      <!-- Rotation around two reference points -->
+      
+      <!-- Rotation around two reference points (block commented out)
       <h4>Rotation based on two reference points:</h4>
       <label for="tiltPoint1X">Point 1 X:</label>
       <input type="number" id="tiltPoint1X" value="0">
@@ -166,26 +178,53 @@
       <input type="number" id="tiltPoint2Y" value="0">
       <br>
       <button id="tiltTwoPointsButton1">Rotate</button>
-    </div>
-  </div>
+      -->
 
-  <div id="translate" class="tab-panel">
-    <!-- Existing translation controls can go here -->
-    <div id="translating">
-      <label for="translationX">Translate at X:</label>
-      <input type="number" id="translationX" value="0">
-      <label for="translationY">Translate at Y:</label>
-      <input type="number" id="translationY" value="0">
-      <button id="translateButton">Translate</button>
     </div>
-  </div>
+  </div>  
 
   <div id="scale" class="tab-panel">
     <!-- Existing scaling controls can go here -->
     <div id="scaling">
+      <br>
+      <h4>By uniform ratio:</h4>
       <label for="scalingFactor">Scaling Factor:</label>
       <input type="number" id="scalingFactor" value="1" step="0.1">
       <button id="scaleButton">Scale</button>
+      
+      <br>
+      
+      <!-- New: Scale by target range (HTML skeleton only) -->
+      <div id="scale-target-range" style="margin-top: 10px;">
+        <h4>By target range:</h4>
+        <div>
+          <span>Measured X:</span>
+          <span>min = <span id="scaleRangeXMin">—</span>, </span>
+          <span>max = <span id="scaleRangeXMax">—</span>, </span>
+          <span>Δ = <span id="scaleRangeXDelta">—</span></span>
+        </div>
+        <br>
+        <div>
+          <span>Measured Y:</span>
+          <span>min = <span id="scaleRangeYMin">—</span>, </span>
+          <span>max = <span id="scaleRangeYMax">—</span>, </span>
+          <span>Δ = <span id="scaleRangeYDelta">—</span></span>
+        </div>
+        <br>
+        <div style="margin-top: 8px;">
+          <label><input type="radio" name="scaleRangeAxis" value="x">Scale by X</label>
+          <label><input type="radio" name="scaleRangeAxis" value="y">Scale by Y</label>
+        </div>
+        <br>
+        <div style="margin-top: 8px;">
+          <label for="scaleDesiredMin">Desired min:</label>
+          <input type="number" id="scaleDesiredMin" step="0.00001" placeholder="e.g., 0.00000">
+          <label for="scaleDesiredMax">Desired max:</label>
+          <input type="number" id="scaleDesiredMax" step="0.00001" placeholder="e.g., 100.00000">
+          <button id="scaleRangeButton">Scale</button>
+        </div>
+      </div>
+      
     </div>
   </div>
   
@@ -197,11 +236,13 @@
     </div>
   </div>
 
+  <!--
   <div id="center-tab" class="tab-panel">
     <div id="centering">     
       <button id="centeringButton">Center</button>
     </div>
   </div>
+  -->
 
   <!-- Explanation Modal -->
   <div id="explanationModal" class="modal">
