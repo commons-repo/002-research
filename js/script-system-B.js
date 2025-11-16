@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pointsList = document.getElementById('points-list');
     let points = [];
     let maxPoints = 0;
+    let shapeCenter = null; // Store center coordinates for circle, arc, ellipse
 
     let img = new Image();
     let imgScale = 1;
@@ -152,6 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Calculate radius as distance from the center to one of the points
       const radius = Math.sqrt(Math.pow(p1.x - centerX, 2) + Math.pow(p1.y - centerY, 2));
 
+      // Store center and radius for export
+      shapeCenter = { x: centerX, y: centerY, radius: radius };
+
       // Calculate the circumference and determine number of points based on 5-pixel spacing
       const circumference = 2 * Math.PI * radius;
       const spacing = 10; // Target spacing between points
@@ -261,12 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function deleteAllPoints() {
       points = [];
+      shapeCenter = null;
       updatePointsList();
       redraw();
     }
 
     function resetPoints() {
       points = [];
+      shapeCenter = null;
       updatePointsList();
       redraw();
     }
@@ -298,6 +304,28 @@ document.addEventListener('DOMContentLoaded', () => {
   
       // Remove the link after download
       document.body.removeChild(link);
+
+      // Export center.csv if shapeCenter exists
+      if (shapeCenter) {
+          let centerContent = "property,value\n";
+          centerContent += `center_x,${shapeCenter.x.toFixed(5)}\n`;
+          centerContent += `center_y,${shapeCenter.y.toFixed(5)}\n`;
+          if (shapeCenter.radius !== undefined) {
+              centerContent += `radius,${shapeCenter.radius.toFixed(5)}\n`;
+          }
+          if (shapeCenter.xRadius !== undefined) {
+              centerContent += `x_radius,${shapeCenter.xRadius.toFixed(5)}\n`;
+              centerContent += `y_radius,${shapeCenter.yRadius.toFixed(5)}\n`;
+          }
+
+          const centerUri = encodeURI("data:text/csv;charset=utf-8," + centerContent);
+          const centerLink = document.createElement("a");
+          centerLink.setAttribute("href", centerUri);
+          centerLink.setAttribute("download", "center.csv");
+          document.body.appendChild(centerLink);
+          centerLink.click();
+          document.body.removeChild(centerLink);
+      }
     }
 
     function exportForOpenSCAD() {
@@ -375,6 +403,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (shapeSelector.value === 'arc' && points.length === 3) {
+            // Store center before generating arc points
+            const radius = Math.sqrt(Math.pow(points[1].x - points[0].x, 2) + Math.pow(points[1].y - points[0].y, 2));
+            shapeCenter = { x: points[0].x, y: points[0].y, radius: radius };
+            
             // Use generateArcPoints for arc creation after three clicks
             const arcPoints = generateArcPoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
             points = arcPoints; // Replace points array with calculated arc points
@@ -382,6 +414,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePointsList();
         }
         if (shapeSelector.value === 'major-arc' && points.length === 3) {
+            // Store center before generating major arc points
+            const radius = Math.sqrt(Math.pow(points[1].x - points[0].x, 2) + Math.pow(points[1].y - points[0].y, 2));
+            shapeCenter = { x: points[0].x, y: points[0].y, radius: radius };
+            
             // Major Arc
             const arcPoints = generateMajorArcPoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
             points = arcPoints;
@@ -390,6 +426,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (shapeSelector.value === 'ellipse' && points.length === 3) {
+            // Store center and radii before generating ellipse points
+            const xRadius = Math.sqrt(Math.pow(points[1].x - points[0].x, 2) + Math.pow(points[1].y - points[0].y, 2));
+            const yRadius = Math.sqrt(Math.pow(points[2].x - points[0].x, 2) + Math.pow(points[2].y - points[0].y, 2));
+            shapeCenter = { x: points[0].x, y: points[0].y, xRadius: xRadius, yRadius: yRadius };
+            
             // Ellipse generation
             const ellipsePoints = generateEllipsePoints(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
             points = ellipsePoints;
