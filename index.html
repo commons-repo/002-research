@@ -90,6 +90,90 @@
         .custom-button span:first-child {
             font-weight: bold;
         }
+
+        .doc-link {
+            margin-top: 30px;
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .doc-link:hover {
+            color: #0056b3;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .doc-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .doc-list li {
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+
+        .doc-list a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1rem;
+            display: block;
+        }
+
+        .doc-list a:hover {
+            text-decoration: underline;
+            color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -131,10 +215,48 @@
             <span>Point Cloud Formatter</span>
         </button>
     </div>
+
+    <div class="doc-link" onclick="openDocumentation()">
+        Documentation
+    </div>
+
+    <!-- Documentation Modal -->
+    <div id="docModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Documentation</h2>
+                <span class="close" onclick="closeDocumentation()">&times;</span>
+            </div>
+            <ul class="doc-list">
+                <li><a href="documents/system-a1-guide.pdf" target="_blank">How to use System A1</a></li>
+                <li><a href="documents/system-a2-guide.pdf" target="_blank">How to use System A2</a></li>
+                <li><a href="documents/system-b-guide.pdf" target="_blank">How to use System B</a></li>
+                <li><a href="documents/system-c-guide.pdf" target="_blank">How to use System C</a></li>
+                <li><a href="documents/system-d-guide.pdf" target="_blank">How to use System D</a></li>
+                <li><a href="documents/system-e-guide.pdf" target="_blank">How to use System E</a></li>
+            </ul>
+        </div>
+    </div>
     
     <script>
         function openPage(url) {
             window.open(url, '_blank');
+        }
+
+        function openDocumentation() {
+            document.getElementById('docModal').style.display = 'block';
+        }
+
+        function closeDocumentation() {
+            document.getElementById('docModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('docModal');
+            if (event.target === modal) {
+                closeDocumentation();
+            }
         }
     </script>
 </body>
