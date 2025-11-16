@@ -18,18 +18,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotationRefX = document.getElementById("rotationRefX");
     const rotationRefY = document.getElementById("rotationRefY");
     const rotationAngleRef  = document.getElementById("rotationAngleRef");
-    const tiltTwoPointsButton1 = document.getElementById("tiltTwoPointsButton1");
-    const tiltPoint1X = document.getElementById("tiltPoint1X");
-    const tiltPoint1Y = document.getElementById("tiltPoint1Y");
-    const tiltPoint2X = document.getElementById("tiltPoint2X");
-    const tiltPoint2Y = document.getElementById("tiltPoint2Y");   
+    //const tiltTwoPointsButton1 = document.getElementById("tiltTwoPointsButton1");
+    //const tiltPoint1X = document.getElementById("tiltPoint1X");
+    //const tiltPoint1Y = document.getElementById("tiltPoint1Y");
+    //const tiltPoint2X = document.getElementById("tiltPoint2X");
+    //const tiltPoint2Y = document.getElementById("tiltPoint2Y");   
     const modal = document.getElementById("explanationModal");
     const modalText = document.getElementById("explanationText");
     const closeModal = document.getElementsByClassName("close")[0];
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const sampleButton = document.getElementById('sampleButton');
-    const centeringButton = document.getElementById('centeringButton');
+    //const centeringButton = document.getElementById('centeringButton');
+    // Range-based uniform scaling elements (match HTML ids)
+    const scaleRangeXMin = document.getElementById('scaleRangeXMin');
+    const scaleRangeXMax = document.getElementById('scaleRangeXMax');
+    const scaleRangeXDelta = document.getElementById('scaleRangeXDelta');
+    const scaleRangeYMin = document.getElementById('scaleRangeYMin');
+    const scaleRangeYMax = document.getElementById('scaleRangeYMax');
+    const scaleRangeYDelta = document.getElementById('scaleRangeYDelta');
+    const scaleDesiredMinInput = document.getElementById('scaleDesiredMin');
+    const scaleDesiredMaxInput = document.getElementById('scaleDesiredMax');
+    const scaleRangeAxisRadios = document.querySelectorAll('input[name="scaleRangeAxis"]');
+    const scaleRangeButton = document.getElementById('scaleRangeButton');
 
     let originalPointCloud = [];
     let transformedPointCloud = [];
@@ -63,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         transformedPointCloud = [...originalPointCloud];
         if (originalPointCloud.length > 0) {
           alert(`Loaded ${originalPointCloud.length} points!`);
+          updateRangeStats();
         } else {
           alert('Failed to load points. Ensure the file has X,Y headers.');
         }
@@ -213,6 +225,103 @@ document.addEventListener('DOMContentLoaded', () => {
       plotAllPlots();
     });
 
+    // -------- Range-Based Uniform Scaling (driven by selected axis) --------
+    function getSelectedRangeAxis() {
+      const checked = document.querySelector('input[name="scaleRangeAxis"]:checked');
+      return checked ? checked.value : null; // 'x' or 'y'
+    }
+
+    function updateRangeStats() {
+      if (!scaleRangeXMin || !scaleRangeXMax || !scaleRangeXDelta || !scaleRangeYMin || !scaleRangeYMax || !scaleRangeYDelta) return;
+      if (transformedPointCloud.length === 0) {
+        scaleRangeXMin.textContent = '—';
+        scaleRangeXMax.textContent = '—';
+        scaleRangeXDelta.textContent = '—';
+        scaleRangeYMin.textContent = '—';
+        scaleRangeYMax.textContent = '—';
+        scaleRangeYDelta.textContent = '—';
+        return;
+      }
+      const xs = transformedPointCloud.map(p => p.x);
+      const ys = transformedPointCloud.map(p => p.y);
+      const xMin = Math.min(...xs); const xMax = Math.max(...xs); const xSpan = xMax - xMin;
+      const yMin = Math.min(...ys); const yMax = Math.max(...ys); const ySpan = yMax - yMin;
+      scaleRangeXMin.textContent = xMin.toFixed(5);
+      scaleRangeXMax.textContent = xMax.toFixed(5);
+      scaleRangeXDelta.textContent = xSpan.toFixed(5);
+      scaleRangeYMin.textContent = yMin.toFixed(5);
+      scaleRangeYMax.textContent = yMax.toFixed(5);
+      scaleRangeYDelta.textContent = ySpan.toFixed(5);
+    }
+
+    function performRangeUniformScaling() {
+      if (transformedPointCloud.length === 0) {
+        alert('No points loaded!');
+        return;
+      }
+      const axis = getSelectedRangeAxis();
+      if (!axis) {
+        alert('Select X or Y as base axis.');
+        return;
+      }
+      const baseVals = transformedPointCloud.map(p => axis === 'x' ? p.x : p.y);
+      const baseMin = Math.min(...baseVals);
+      const baseMax = Math.max(...baseVals);
+      const baseSpan = baseMax - baseMin;
+      if (baseSpan === 0) {
+        alert('Cannot scale: base axis span is zero.');
+        return;
+      }
+      const dMinRaw = parseFloat(scaleDesiredMinInput ? scaleDesiredMinInput.value : '');
+      const dMaxRaw = parseFloat(scaleDesiredMaxInput ? scaleDesiredMaxInput.value : '');
+      if (isNaN(dMinRaw) || isNaN(dMaxRaw)) {
+        alert('Enter numeric desired min and max.');
+        return;
+      }
+      if (dMinRaw === dMaxRaw) {
+        alert('Desired min and max must differ.');
+        return;
+      }
+      // Normalize ordering (allow reversed entry)
+      let desiredMin = dMinRaw;
+      let desiredMax = dMaxRaw;
+      if (desiredMax < desiredMin) {
+        const tmp = desiredMin; desiredMin = desiredMax; desiredMax = tmp;
+      }
+      const desiredSpan = desiredMax - desiredMin;
+      const scaleFactor = desiredSpan / baseSpan;
+
+      // Compute other axis min for anchoring (Option 1: keep its min fixed)
+      if (axis === 'x') {
+        const otherMin = Math.min(...transformedPointCloud.map(p => p.y));
+        transformedPointCloud = transformedPointCloud.map(p => ({
+          x: (p.x - baseMin) * scaleFactor + desiredMin,
+          y: (p.y - otherMin) * scaleFactor + otherMin,
+        }));
+      } else { // axis === 'y'
+        const otherMin = Math.min(...transformedPointCloud.map(p => p.x));
+        transformedPointCloud = transformedPointCloud.map(p => ({
+          x: (p.x - otherMin) * scaleFactor + otherMin,
+          y: (p.y - baseMin) * scaleFactor + desiredMin,
+        }));
+      }
+
+      allPlots.push({
+        id: allPlots.length + 1,
+        points: [...transformedPointCloud],
+        color: generateColor(allPlots.length + 1),
+      });
+      plotAllPlots();
+      updateRangeStats();
+      alert(`Range uniform scaling applied (base: ${axis}). Scale factor: ${scaleFactor.toFixed(5)}`);
+    }
+
+    if (scaleRangeButton) {
+      scaleRangeButton.addEventListener('click', performRangeUniformScaling);
+    }
+    scaleRangeAxisRadios.forEach(r => r.addEventListener('change', updateRangeStats));
+    updateRangeStats();
+
     function plotAllPlots() {
       const traces = allPlots.map(plot => ({
           x: plot.points.map(p => p.x),
@@ -256,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Re-plot only the original points
       plotAllPlots();
+      updateRangeStats();
 
       alert('Reset to original state.');
     });
@@ -285,35 +395,38 @@ document.addEventListener('DOMContentLoaded', () => {
       plotAllPlots();
     });    
 
+    /*
+    // Two-point rotation: disabled/commented out
     tiltTwoPointsButton1.addEventListener("click", () => {
       const x1 = parseFloat(tiltPoint1X.value);
       const y1 = parseFloat(tiltPoint1Y.value);
       const x2 = parseFloat(tiltPoint2X.value);
       const y2 = parseFloat(tiltPoint2Y.value);
       const sign = getRotationSign();
-    
+
       const deltaY = y2 - y1;
       const deltaX = x2 - x1;
       const angle = sign * -Math.atan2(deltaY, deltaX);
-    
+
       transformedPointCloud = transformedPointCloud.map(point => {
         const xShifted = point.x - x1;
         const yShifted = point.y - y1;
-    
+
         return {
           x: xShifted * Math.cos(angle) - yShifted * Math.sin(angle) + x1,
           y: xShifted * Math.sin(angle) + yShifted * Math.cos(angle) + y1,
         };
       });
-    
+
       allPlots.push({
         id: allPlots.length + 1,
         points: [...transformedPointCloud],
         color: generateColor(allPlots.length + 1),
       });
-    
+
       plotAllPlots();
     });
+    */
 
     function getRotationSign() {
       const sign = document.querySelector('input[name="rotationSign"]:checked').value;
@@ -351,45 +464,52 @@ document.addEventListener('DOMContentLoaded', () => {
       plotAllPlots();
     });
 
+    /*
+    // Centering (centroid shift): disabled/commented out
     centeringButton.addEventListener("click", () => {
       if (transformedPointCloud.length === 0) {
-          alert("No points loaded!");
-          return;
+        alert("No points loaded!");
+        return;
       }
-  
+
       // Compute centroid (average x, y)
       const centroidX = transformedPointCloud.reduce((sum, p) => sum + p.x, 0) / transformedPointCloud.length;
       const centroidY = transformedPointCloud.reduce((sum, p) => sum + p.y, 0) / transformedPointCloud.length;
-  
+
       // Shift all points to make the centroid (0,0)
       transformedPointCloud = transformedPointCloud.map(point => ({
-          x: point.x - centroidX,
-          y: point.y - centroidY,
+        x: point.x - centroidX,
+        y: point.y - centroidY,
       }));
-  
+
       // Store and plot centered points
       allPlots.push({
-          id: allPlots.length + 1,
-          points: [...transformedPointCloud],
-          color: generateColor(allPlots.length + 1),
+        id: allPlots.length + 1,
+        points: [...transformedPointCloud],
+        color: generateColor(allPlots.length + 1),
       });
-  
+
       plotAllPlots();
     });
+    */
     
     // Explanation Button
     explanationButton.addEventListener('click', () => {
       const explanationText = `
       Transformations Explanation:
 
-      1. Mirroring:
+      1. Translating:
+
+         - (x, y) → (x + Δx, y + Δy)
+
+      2. Mirroring:
 
          - Mirroring across the X-axis: (x, y) → (x, -y)
          - Mirroring across the Y-axis: (x, y) → (-x, y)
          - Mirroring across a custom X = c: (x, y) → (2c - x, y)
          - Mirroring across a custom Y = c: (x, y) → (x, 2c - y)
     
-      2. Rotating:
+      3. Rotating:
 
          - Standard Rotation around the origin:
            - x' = x cos(θ) - y sin(θ)
@@ -399,25 +519,26 @@ document.addEventListener('DOMContentLoaded', () => {
            - Translate: (x, y) → (x - x₀, y - y₀)
            - Rotate using:
              - x' = (x - x₀) cos(θ) - (y - y₀) sin(θ) + x₀
-             - y' = (x - x₀) sin(θ) + (y - y₀) cos(θ) + y₀
-    
-         - Rotation based on two reference points:
-           - Find slope: m = (y₂ - y₁) / (x₂ - x₁)
-           - Find rotation angle: θ = -atan(m) (for horizontal)
-           - Find rotation angle: θ = π/2 - atan(m) (for vertical)
-           - Apply rotation after shifting the first point to the origin:
-             - x' = (x - x₁) cos(θ) - (y - y₁) sin(θ) + x₁
-             - y' = (x - x₁) sin(θ) + (y - y₁) cos(θ) + y₁ 
-             
-         - Regardless of rotation methods, one may rotate clockwise/counter-clockwise
+             - y' = (x - x₀) sin(θ) + (y - y₀) cos(θ) + y₀  
           
-      3. Translating:
-
-         - (x, y) → (x + Δx, y + Δy)
-    
+         - Regardless of rotation methods, one may rotate clockwise/counter-clockwise
+            
       4. Scaling:
 
-         - (x, y) → (s * x, s * y)      
+         - Uniform scaling by ratio:
+           - (x, y) → (s * x, s * y)
+
+         - Uniform scaling by range:
+           - Select base axis (X or Y)
+           - Specify desired min and max for the selected axis.
+           - Compute scale factor: 
+             s = (desired max - desired min) / (current max - current min)
+           - Map base axis linearly: 
+             base' = (base - current min) × s + desired min
+           - Scale other axis uniformly with same factor:
+             other' = (other - other min) × s + other min
+           - This preserves aspect ratio while fitting the selected axis to the target range.
+           - Handles negative ranges and reversed min/max entry (auto-normalized).
 
       5. Sampling:
 
@@ -425,15 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
          - If n = 1, every point is retained (no reduction or sampled every point).
          - If n = 2, every second point is kept, skipping one in between.
          - If n = 3, every third point is kept, skipping two in between.
-         - Ensures the last point is always included for continuity.
-
-      6. Centering:
-
-         - Compute the centroid (x̄, ȳ) of the point cloud:
-            - x̄ = (Σx) / N, ȳ = (Σy) / N
-         - Shift all points so that the centroid moves to (0,0):
-            - x' = x - x̄
-            - y' = y - ȳ   
+         - Ensures the last point is always included for continuity.         
       
       `;
 
@@ -469,3 +582,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });       
 
   });
+
+  /*
+  6. Centering:
+
+         - Compute the centroid (x̄, ȳ) of the point cloud:
+            - x̄ = (Σx) / N, ȳ = (Σy) / N
+         - Shift all points so that the centroid moves to (0,0):
+            - x' = x - x̄
+            - y' = y - ȳ
+  
+    - Rotation based on two reference points:
+      - Find slope: m = (y₂ - y₁) / (x₂ - x₁)
+      - Find rotation angle: θ = -atan(m) (for horizontal)
+      - Find rotation angle: θ = π/2 - atan(m) (for vertical)
+      - Apply rotation after shifting the first point to the origin:
+          - x' = (x - x₁) cos(θ) - (y - y₁) sin(θ) + x₁
+          - y' = (x - x₁) sin(θ) + (y - y₁) cos(θ) + y₁
+  */
