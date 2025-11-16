@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System-E</title>
+  <script src="js/plotly-2.24.1.min.js"></script>
+  <link rel="stylesheet" href="js/jexcel.css" type="text/css" />
+  <link rel="stylesheet" href="js/jsuites.css" type="text/css" />
+  <script src="js/jsuites.js"></script>
+  <script src="js/jexcel.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    h3 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .left-panel, .right-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .input-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .input-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .input-box h4 {
+      margin-top: 0;
+      color: #555;
+    }
+    textarea {
+      width: 100%;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    #csvTextArea {
+      height: 200px;
+    }
+    #formattedOutput {
+      height: 350px;
+      background-color: #f8f9fa;
+    }
+    .file-input {
+      margin: 10px 0;
+    }
+    .controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .format-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .format-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    select {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    #plotDiv {
+      width: 100%;
+      max-width: 700px;
+      height: 700px;
+      margin: 0 auto;
+    }
+    .info {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 2% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 1200px;
+      height: 85vh;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    #spreadsheet {
+      margin: 20px 0;
+      flex: 1;
+      overflow: hidden;
+    }
+    .search-container {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .search-container input {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .formula-reference {
+      max-height: 400px;
+      overflow-y: auto;
+      text-align: left;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .formula-reference h4 {
+      color: #007bff;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+    .formula-reference code {
+      background-color: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #d63384;
+    }
+  </style>
+</head>
+<body>
+  <h3>Point Cloud Formatter</h3>
+  
+  <div class="container">
+    <div class="main-grid">
+      <!-- Left Panel: Input and Plot -->
+      <div class="left-panel">
+        <div class="input-section">
+          <div class="input-box">
+            <h4>Option 1: Upload CSV File</h4>
+            <input type="file" id="csvFileInput" class="file-input" accept=".csv">
+            <p style="font-size: 12px; color: #666;">Upload a CSV file with X,Y headers</p>
+          </div>
+          
+          <div class="input-box">
+            <h4>Option 2: Paste CSV Data</h4>
+            <textarea id="csvTextArea" placeholder="Paste your CSV data here (with X,Y headers)&#10;Example:&#10;X,Y&#10;0,0&#10;1,2&#10;2,4"></textarea>
+            <div style="text-align: center;">
+              <button onclick="loadFromTextArea()">Load from Text</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info" id="dataInfo">No data loaded</div>
+        
+        <div class="controls">
+          <label for="plotType">Plot Type:</label>
+          <select id="plotType">
+            <option value="scatter">Scatter</option>
+            <option value="lines">Line</option>
+            <option value="lines+markers">Line with Markers</option>
+          </select>
+          <button onclick="updatePlot()" id="plotButton" disabled>Plot Data</button>
+          <button onclick="clearData()">Clear All</button>
+        </div>
+      </div>
+      
+      <!-- Right Panel: Formatted Output -->
+      <div class="right-panel">
+        <h4 style="margin-top: 0; color: #555;">Formatted Output for CAD Tools</h4>
+        <div class="format-buttons">
+          <button onclick="formatForCADQuery()" id="cadqueryBtn" disabled>Format for CadQuery</button>
+          <button onclick="formatForOpenSCAD()" id="openscadBtn" disabled>Format for OpenSCAD</button>
+        </div>
+        <textarea id="formattedOutput" readonly placeholder="Formatted output will appear here..."></textarea>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="copyFormatted()" id="copyBtn" disabled>Copy to Clipboard</button>
+          <button onclick="exportFormatted()" id="exportBtn" disabled>Export as TXT</button>
+          <button onclick="openSpreadsheet()">Open Spreadsheet Editor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div id="plotDiv"></div>
+  </div>
+
+  <!-- Spreadsheet Modal -->
+  <div id="spreadsheetModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin: 0;">Spreadsheet Editor</h3>
+        <span class="close" onclick="closeSpreadsheet()">&times;</span>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <input type="file" id="spreadsheetCSVInput" accept=".csv" style="display: none;" onchange="importSpreadsheetCSV(event)">
+        <button onclick="document.getElementById('spreadsheetCSVInput').click()">Import CSV</button>
+        <button onclick="exportSpreadsheetCSV()">Export CSV</button>
+        <button onclick="clearSpreadsheet()">Clear Spreadsheet</button>
+        <button onclick="closeSpreadsheet()">Close</button>
+        <button onclick="showFormulaReference()">Formula Reference Guide</button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="spreadsheetSearch" placeholder="Search in spreadsheet..." onkeyup="searchSpreadsheet(this.value)" oninput="if(!this.value) searchSpreadsheet('')">
+        <button onclick="clearSearch()" style="margin-left: 5px;">Clear Search</button>
+      </div>
+      <div id="spreadsheet"></div>
+    </div>
+  </div>
+
+  <script src="js/script-system-E.js"></script>
+</body>
+</html>
