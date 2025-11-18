@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System-E</title>
-  <script src="js/plotly-2.24.1.min.js"></script>
-  <link rel="stylesheet" href="js/jexcel.css" type="text/css" />
-  <link rel="stylesheet" href="js/jsuites.css" type="text/css" />
-  <script src="js/jsuites.js"></script>
-  <script src="js/jexcel.js"></script>
+  <title>System-E - CSV Plotter</title>
+  <script src="js-css/plotly-2.24.1.min.js"></script>
+  <link rel="stylesheet" href="js-css/jexcel.css" type="text/css" />
+  <link rel="stylesheet" href="js-css/jsuites.css" type="text/css" />
+  <script src="js-css/jsuites.js"></script>
+  <script src="js-css/jexcel.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -174,6 +174,37 @@
       border: 1px solid #ddd;
       border-radius: 4px;
     }
+    .sheet-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #ddd;
+    }
+    .sheet-tab {
+      padding: 10px 20px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      cursor: pointer;
+      border-radius: 5px 5px 0 0;
+      transition: background-color 0.2s;
+    }
+    .sheet-tab:hover {
+      background-color: #e0e0e0;
+    }
+    .sheet-tab.active {
+      background-color: white;
+      border-bottom: 2px solid white;
+      margin-bottom: -2px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .sheet-container {
+      display: none;
+    }
+    .sheet-container.active {
+      display: block;
+    }
     .formula-reference {
       max-height: 400px;
       overflow-y: auto;
@@ -272,10 +303,23 @@
         <input type="text" id="spreadsheetSearch" placeholder="Search in spreadsheet..." onkeyup="searchSpreadsheet(this.value)" oninput="if(!this.value) searchSpreadsheet('')">
         <button onclick="clearSearch()" style="margin-left: 5px;">Clear Search</button>
       </div>
-      <div id="spreadsheet"></div>
+      
+      <!-- Sheet Tabs -->
+      <div class="sheet-tabs">
+        <div class="sheet-tab active" onclick="switchSheet(0)">Sheet 1</div>
+        <div class="sheet-tab" onclick="switchSheet(1)">Sheet 2</div>
+        <div class="sheet-tab" onclick="switchSheet(2)">Sheet 3</div>
+        <div class="sheet-tab" onclick="switchSheet(3)">Sheet 4</div>
+      </div>
+      
+      <!-- Sheet Containers -->
+      <div id="sheet-0" class="sheet-container active"></div>
+      <div id="sheet-1" class="sheet-container"></div>
+      <div id="sheet-2" class="sheet-container"></div>
+      <div id="sheet-3" class="sheet-container"></div>
     </div>
   </div>
 
-  <script src="js/script-system-E.js"></script>
+  <script src="js-css/script-system-E.js"></script>
 </body>
 </html>
