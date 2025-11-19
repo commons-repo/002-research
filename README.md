@@ -67,14 +67,14 @@ Kitami Institute of Technology, Japan
 │   │   └── system-d-guide.pdf                   # User guide for System D
 │   │   └── system-e-guide.pdf                   # User guide for System E
 │   └── rendering layer-related/                 # Rendering Layer documentation
-│       ├── OpenSCAD_template_documentation.pdf  # OpenSCAD template guide
+│       ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
 │       └── openscad_template.scad               # OpenSCAD template file
 │
 ├── example-case-images/                         # Images for example cases
 │
 ├── functions/                                   # Additional utility functions
 │   └── OpenSCAD/                                # OpenSCAD-related utilities
-│       ├── OpenSCAD_template_documentation.pdf  # OpenSCAD template guide
+│       ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
 │       └── openscad_template.scad               # OpenSCAD template file
 │
 ├── LICENSE                                      # MIT License file
@@ -196,16 +196,24 @@ Comprehensive documentation is available in the `documents/` folder:
 ### IPCM Layer Documentation
 
 - **System A1 Guide:** Step-by-step instructions on how to use System A1
+   [system-a1-guide.pdf](documents/ipcm%20layer-related/system-a1-guide.pdf)
 - **System A2 Guide:** Step-by-step instructions on how to use System A2
+   [system-a2-guide.pdf](documents/ipcm%20layer-related/system-a2-guide.pdf)
 - **System B Guide:** Step-by-step instructions on how to use System B
+   [system-b-guide.pdf](documents/ipcm%20layer-related/system-b-guide.pdf)
 - **System C Guide:** Step-by-step instructions on how to use System C
+   [system-c-guide.pdf](documents/ipcm%20layer-related/system-c-guide.pdf)
 - **System D Guide:** Step-by-step instructions on how to use System D
+   [system-d-guide.pdf](documents/ipcm%20layer-related/system-d-guide.pdf)
 - **System E Guide:** Step-by-step instructions on how to use System E
+   [system-e-guide.pdf](documents/ipcm%20layer-related/system-e-guide.pdf)
 
 ### Rendering Layer Documentation
 
-- **OpenSCAD Template Guide:** Introduction of the developed utility functions
-- **OpenSCAD Template File:** Ready-to-use template for the developed functions
+- **OpenSCAD Template Guide:** Introduction of the developed utility functions, how to use, and example use cases.
+   [openscad_template_documentation.pdf](documents/rendering%20layer-related/openscad_template_documentation.pdf)
+- **OpenSCAD Template File:** Ready-to-use template for the developed functions.
+   [openscad_template.scad](documents/rendering%20layer-related/openscad_template.scad)
 
 **Access Documentation:** Click the "Documentation" link on `index.html` or browse the `documents/` folder directly.
 
