@@ -68,12 +68,14 @@ Kitami Institute of Technology, Japan
 │   │   └── system-e-guide.pdf                   # User guide for System E
 │   └── rendering layer-related/                 # Rendering Layer documentation
 │       ├── OpenSCAD_template_documentation.pdf  # OpenSCAD template guide
-│       └── template.scad                        # OpenSCAD template file
+│       └── openscad_template.scad               # OpenSCAD template file
 │
 ├── example-case-images/                         # Images for example cases
 │
 ├── functions/                                   # Additional utility functions
 │   └── OpenSCAD/                                # OpenSCAD-related utilities
+│       ├── OpenSCAD_template_documentation.pdf  # OpenSCAD template guide
+│       └── openscad_template.scad               # OpenSCAD template file
 │
 ├── LICENSE                                      # MIT License file
 └── README.md                                    # This file
@@ -143,6 +145,7 @@ Kitami Institute of Technology, Japan
   -  CSV file with (X, Y) coordinates 
   - `points.csv` - Generated points data
   - `center.csv` - Center coordinates (for circle, arc, ellipse)
+- **Documentation:** [system-b-guide.pdf](documents/ipcm%20layer-related/system-b-guide.pdf)
 
 ### **System C: Point Cloud Visualizer and Transformer**
 
@@ -153,7 +156,8 @@ Kitami Institute of Technology, Japan
   - Geometric transformations: translation, mirroring, rotation, scaling, and sampling
 - **Ouput:**
   - Transformed points
-  - CSV file with (X, Y) coordinates 
+  - CSV file with (X, Y) coordinates
+- **Documentation:** [system-c-guide.pdf](documents/ipcm%20layer-related/system-c-guide.pdf)
 
 ### **System D: Point Cloud Cleaner and Sequencer**
 
@@ -167,6 +171,7 @@ Kitami Institute of Technology, Japan
 - **Ouput:**
   - Transformed points
   - CSV file with (X, Y) coordinates
+- **Documentation:** [system-d-guide.pdf](documents/ipcm%20layer-related/system-d-guide.pdf)
 
 ### **System E: Point Cloud Formatter (CSV Plotter & Editor)**
 
@@ -180,6 +185,7 @@ Kitami Institute of Technology, Japan
   - **Search Functionality:** Find data across sheets
   - **Formula Support:** SUM, AVERAGE, MIN, MAX, COUNT, IF, VLOOKUP, CONCAT, etc.
   - **Import/Export:** CSV per sheet
+- **Documentation:** [system-e-guide.pdf](documents/ipcm%20layer-related/system-e-guide.pdf)
 
 ---
 
@@ -251,5 +257,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** November 18, 2025
+**Last Updated:** November 19, 2025
 
