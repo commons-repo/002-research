@@ -337,7 +337,24 @@ function exportSpreadsheetCSV() {
     
     // Get data without headers
     const data = activeSheet.getData();
-    const csv = data.map(row => row.join(',')).join('\n');
+    
+    // Find the maximum column index with data across all rows
+    let maxCol = 0;
+    data.forEach(row => {
+        for (let i = row.length - 1; i >= 0; i--) {
+            if (row[i] !== null && row[i] !== undefined && row[i] !== '') {
+                maxCol = Math.max(maxCol, i + 1);
+                break;
+            }
+        }
+    });
+    
+    // Trim empty trailing columns and filter out completely empty rows
+    const trimmedData = data
+        .map(row => row.slice(0, maxCol))
+        .filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+    
+    const csv = trimmedData.map(row => row.join(',')).join('\n');
     
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
