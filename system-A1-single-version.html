@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System A1 [Single Segment Version]</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;            
+    }
+    canvas {
+      border: 1px solid black;
+      display: block;
+      margin: 20px auto;
+    }
+    #controls {
+      text-align: center;
+      margin-top: 10px;
+    }
+    button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h3 style="text-align: center;">System A1 [Single Segment Version]</h3>
+  <div id="settings" style="text-align: center;">
+    <input type="file" id="imageLoader" accept="image/*">
+  </div>
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <div id="controls">
+    <button id="selectMode" disabled>Select Points</button>
+    <button id="generatePoints" disabled>Generate Points</button>
+    <button id="adjustMode" disabled>Adjust Points</button>    
+    <button id="clearPoints" disabled>Clear Points</button>
+    <button id="export" disabled>Export Points</button>
+  </div>
+  <script src="js-css/script-system-A1-single-version.js"></script>
+</body>
+</html>

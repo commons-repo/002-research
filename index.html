@@ -216,8 +216,10 @@
         </button>
     </div>
 
-    <div class="doc-link" onclick="openDocumentation()">
-        Documentation (Click to view and download the related documents and templates)
+    <div class="doc-link">
+        <span onclick="openDocumentation()" style="cursor: pointer;">Documentation (Download User Guides and Templates)</span>
+        <span style="margin: 0 10px; color: #999;">|</span>
+        <span onclick="openOtherVersions()" style="cursor: pointer;">Other Versions</span>
     </div>
 
     <!-- Documentation Modal -->
@@ -240,6 +242,22 @@
             </ul>
         </div>
     </div>
+
+    <!-- Other Versions Modal -->
+    <div id="versionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Other Versions</h2>
+                <span class="close" onclick="closeOtherVersions()">&times;</span>
+            </div>
+            <ul class="doc-list">
+                <li><a href="interactive-bézier-curves.html" target="_blank">Learn Interactive Bézier Curves</a></li>
+                <li><a href="interactive-spline-curves.html" target="_blank">Learn Interactive Spline Curves</a></li>
+                <li><a href="system-A1-single-version.html" target="_blank">System A1 (Single Version)</a></li>
+                <li><a href="system-A2-single-version.html" target="_blank">System A2 (Single Version)</a></li>
+            </ul>
+        </div>
+    </div>
     
     <script>
         function openPage(url) {
@@ -254,11 +272,22 @@
             document.getElementById('docModal').style.display = 'none';
         }
 
+        function openOtherVersions() {
+            document.getElementById('versionsModal').style.display = 'block';
+        }
+
+        function closeOtherVersions() {
+            document.getElementById('versionsModal').style.display = 'none';
+        }
+
         // Close modal when clicking outside of it
         window.onclick = function(event) {
-            const modal = document.getElementById('docModal');
-            if (event.target === modal) {
+            const docModal = document.getElementById('docModal');
+            const versionsModal = document.getElementById('versionsModal');
+            if (event.target === docModal) {
                 closeDocumentation();
+            } else if (event.target === versionsModal) {
+                closeOtherVersions();
             }
         }
     </script>
