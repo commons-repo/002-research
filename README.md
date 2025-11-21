@@ -37,6 +37,11 @@ Kitami Institute of Technology, Japan
 ├── system-D.html                                # Point Cloud Cleaner and Sequencer
 ├── system-E.html                                # Point Cloud Formatter (CSV Plotter & Editor)
 │
+├── interactive-bézier-curves.html               # Learning tool for Bézier curve
+├── interactive-spline-curves.html               # Learning tool for spline curve
+├── system-A1-single-version.html                # Single segment version of System A1 (Early Experimentation)
+├── system-A2-single-version.html                # Single segment version of System A2 (Early Experimentation)
+│
 ├── js-css/                                      # JavaScript libraries, stylesheets, and scripts
 │   ├── d3.v6.min.js                             # D3.js library for visualizations
 │   ├── plotly-2.24.1.min.js                     # Plotly.js for interactive plotting
@@ -51,6 +56,10 @@ Kitami Institute of Technology, Japan
 │   ├── script-system-C.js                       # Logic for System C
 │   ├── script-system-E.js                       # Logic for System E
 │   ├── script-example-cases.js                  # Logic for example cases slider
+│   ├── script-interactive-bézier-curves.js      # Logic for Bézier curves tool
+│   ├── script-interactive-spline-curves.js      # Logic for spline curves tool
+│   ├── script-system-A1-single-version.js       # Logic for System A1 single version
+│   ├── script-system-A2-single-version.js       # Logic for System A2 single version
 │   ├── sample.csv                               # Sample CSV file for testing
 │   └── system-D.gif                             # Animation demonstrating System D
 │
@@ -61,10 +70,10 @@ Kitami Institute of Technology, Japan
 ├── documents/                                   # Documentation and templates
 │   ├── ipcm layer-related/                      # IPCM Layer documentation
 │   │   ├── system-a1-guide.pdf                  # User guide for System A1
-│   │   └── system-a2-guide.pdf                  # User guide for System A2
-│   │   └── system-b-guide.pdf                   # User guide for System B
-│   │   └── system-c-guide.pdf                   # User guide for System C
-│   │   └── system-d-guide.pdf                   # User guide for System D
+│   │   ├── system-a2-guide.pdf                  # User guide for System A2
+│   │   ├── system-b-guide.pdf                   # User guide for System B
+│   │   ├── system-c-guide.pdf                   # User guide for System C
+│   │   ├── system-d-guide.pdf                   # User guide for System D
 │   │   └── system-e-guide.pdf                   # User guide for System E
 │   └── rendering layer-related/                 # Rendering Layer documentation
 │       ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
@@ -265,5 +274,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** November 19, 2025
+**Last Updated:** November 21, 2025
 
