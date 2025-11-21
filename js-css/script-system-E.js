@@ -237,21 +237,31 @@ function openSpreadsheet() {
     }
 }
 
+// Helper function to convert column index to Excel-style name (A, B, ... Z, AA, AB, ... CV)
+function getColumnName(index) {
+    let name = '';
+    while (index >= 0) {
+        name = String.fromCharCode(65 + (index % 26)) + name;
+        index = Math.floor(index / 26) - 1;
+    }
+    return name;
+}
+
 function initializeSheet(sheetIndex) {
-    // Create columns A-Z
+    // Create columns A-CV (100 columns)
     const columns = [];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 100; i++) {
         columns.push({
             type: 'text',
-            title: String.fromCharCode(65 + i), // A-Z
+            title: getColumnName(i),
             width: 100
         });
     }
     
     spreadsheetInstances[sheetIndex] = jspreadsheet(document.getElementById(`sheet-${sheetIndex}`), {
-        data: Array(3000).fill(null).map(() => Array(26).fill('')),
+        data: Array(3000).fill(null).map(() => Array(100).fill('')),
         columns: columns,
-        minDimensions: [26, 3000],
+        minDimensions: [100, 3000],
         allowInsertRow: true,
         allowInsertColumn: true,
         allowDeleteRow: true,
@@ -378,16 +388,16 @@ function importSpreadsheetCSV(event) {
         const data = lines.map(line => {
             // Simple CSV parsing - split by comma
             const values = line.split(',').map(v => v.trim());
-            // Pad to 26 columns if needed
-            while (values.length < 26) {
+            // Pad to 100 columns if needed
+            while (values.length < 100) {
                 values.push('');
             }
-            return values.slice(0, 26); // Take only first 26 columns
+            return values.slice(0, 100); // Take only first 100 columns
         });
         
         // Pad to 3000 rows if needed
         while (data.length < 3000) {
-            data.push(Array(26).fill(''));
+            data.push(Array(100).fill(''));
         }
         
         const activeSheet = spreadsheetInstances[activeSheetIndex];
