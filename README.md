@@ -75,9 +75,12 @@ Kitami Institute of Technology, Japan
 │   │   ├── system-c-guide.pdf                   # User guide for System C
 │   │   ├── system-d-guide.pdf                   # User guide for System D
 │   │   └── system-e-guide.pdf                   # User guide for System E
-│   └── rendering layer-related/                 # Rendering Layer documentation
-│       ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
-│       └── openscad_template.scad               # OpenSCAD template file
+│   ├── rendering layer-related/                 # Rendering Layer documentation
+│   │   ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
+│   │   └── openscad_template.scad               # OpenSCAD template file
+│   └── comparison-related/                      # Comparison with traditional workflow
+│       ├── comparison-example-1.pdf             # Workflow comparison example 1
+│       └── comparison-example-2.pdf             # Workflow comparison example 2
 │
 ├── example-case-images/                         # Images for example cases
 │
@@ -224,6 +227,13 @@ Comprehensive documentation is available in the `documents/` folder:
 - **OpenSCAD Template File:** Ready-to-use template for the developed functions.
    [openscad_template.scad](documents/rendering%20layer-related/openscad_template.scad)
 
+### Comparison with Traditional Workflow
+
+- **Comparison Example 1:** Workflow comparison with traditional approaches
+   [comparison-example-1.pdf](documents/comparison-related/comparison-example-1.pdf)
+- **Comparison Example 2:** Workflow comparison with traditional approaches
+   [comparison-example-2.pdf](documents/comparison-related/comparison-example-2.pdf)
+
 **Access Documentation:** Click the "Documentation" link on `index.html` or browse the `documents/` folder directly.
 
 ---
@@ -274,5 +284,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** November 21, 2025
+**Last Updated:** December 29, 2025
 
