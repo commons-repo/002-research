@@ -84,6 +84,8 @@ Kitami Institute of Technology, Japan
 │
 ├── example-case-images/                         # Images for example cases
 │
+├── sample images/                               # Sample images for reference
+│
 ├── functions/                                   # Additional utility functions
 │   └── OpenSCAD/                                # OpenSCAD-related utilities
 │       ├── openSCAD_template_documentation.pdf  # OpenSCAD template guide
@@ -105,16 +107,22 @@ Kitami Institute of Technology, Japan
 
 ### Installation
 
-1. **Clone the repository:**
+1. **Direct Online Access (Recommended):**
+
+   Visit the online portal directly: https://commons-repo.github.io/002-research/
+   - All systems are accessible through your web browser
+   - No installation required
+
+2. **Local Installation:**
+
+   Clone the repository:
 
    ```bash
    git clone https://github.com/commons-repo/002-research.git 
    cd 002-research
    ```
 
-2. **Open the main interface:**
-
-   - Simply open `index.html` in your web browser
+   - Open `index.html` in your web browser
    - All systems (A1, A2, B, C, E) are **browser-based** and require no installation
 
 3. **For System D (Python backend):**
@@ -284,5 +292,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** December 29, 2025
+**Last Updated:** 31 December 2025
 
