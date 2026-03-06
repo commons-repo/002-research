@@ -298,5 +298,7 @@ If you use this system in your research or applications, please cite using the f
 
 Angkush Kumar Ghosh (2026). **An Open-Source CAD Framework Based on Point-Cloud Modeling and Script-Based Rendering: Development and Application.** Machines, 14(1):107, available online. DOI: 10.3390/machines14010107.
 
+---
+
 **Last Updated:** 6 March 2026
 
